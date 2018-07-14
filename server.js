@@ -66,6 +66,7 @@ app.put('/accounts/:id', (req, res) => {
             balance: parseInt(req.body.balance, 10) || Account.schema.obj.balance.default  
         });
         account.save( (err, account) => {
+            if (err) return res.status(500).send(err.message ? err.message : err);
             res.status(200).send(account);
         });
     });
