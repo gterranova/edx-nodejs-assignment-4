@@ -1,0 +1,24 @@
+{
+  "name": "edx-nodejs-assignment-4",
+  "version": "1.0.0",
+  "description": "edx Introduction to NodeJS: Assignment 3 =====",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node-dev server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "1.18.3",
+    "errorhandler": "1.5.0",
+    "express": "4.16.3",
+    "mongoose": "5.2.3",
+    "morgan": "1.9.0",
+    "opn": "5.3.0"
+  },
+  "devDependencies": {
+    "node-dev": "^3.1.3"
+  }
+}

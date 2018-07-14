@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>REST API with Express+MongoDB Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+    <script src="http://ajax.aspnetcdn.com/ajax/jquery/jquery-1.9.0.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-debug.js"></script>
+</head>
+
+<body>
+    <div id="main">
+        <div class="navbar">
+            <div class="navbar-inner">
+                <a class="brand" href="#">REST API with Express+MongoDB Demo</a>
+                <button data-bind="click: beginAdd" class="btn btn-primary">Add Account</button>
+            </div>
+        </div>
+        <div class="container">
+            <table style="width: 100%">
+                <!-- ko foreach: accounts -->
+                <tbody>
+                    <tr>
+                        <td style="width: 60%">
+                            <p style="margin-top: 10px; margin-bottom: 10px">
+                                <b>Account Id:</b>
+                                <span data-bind="text: _id"></span>
+                                <br>
+                                <b>Account name:</b>
+                                <span data-bind="text: name"></span>
+                                <br>
+                                <b>Balance:</b>
+                                <span data-bind="text: balance"></span>
+                            </p>
+                        </td>
+                        <td>
+                            <button data-bind="click: $parent.beginEdit" class="btn">Edit Account</button>
+                            <button data-bind="click: $parent.remove" class="btn btn-danger">Delete Account</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="border-block-end: 1px solid #ccc"></td>
+                    </tr>
+                </tbody>
+                <!-- /ko -->
+            </table>
+        </div>
+    </div>
+    <div id="add" class="modal hide fade" tabindex="=1" role="dialog" aria-labelledby="addDialogLabel" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="addDialogLabel">Add Account</h3>
+        </div>
+        <div class="modal-body">
+            <form class="form-horizontal">
+                <div class="control-group">
+                    <label class="control-label" for="inputAccount">Account</label>
+                    <div class="controls">
+                        <input data-bind="value: name" type="text" id="inputAccount" placeholder="Account name" style="width: 300px;">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="inputBalance">Balance</label>
+                    <div class="controls">
+                        <input data-bind="value: balance" type="text" id="inputBalance" placeholder="Balance" style="width: 300px;">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button data-bind="click: addAccount" class="btn btn-primary">Add Account</button>
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        </div>
+    </div>
+    <div id="edit" class="modal hide fade" tabindex="=1" role="dialog" aria-labelledby="editDialogLabel" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="editDialogLabel">Edit Account</h3>
+        </div>
+        <div class="modal-body">
+            <form class="form-horizontal">
+                <div class="control-group">
+                    <label class="control-label" for="inputId">Id</label>
+                    <div class="controls">
+                        <input data-bind="value: _id" type="text" id="inputId" style="width: 300px;" disabled>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="inputAccount">Account</label>
+                    <div class="controls">
+                        <input data-bind="value: name" type="text" id="inputAccount" placeholder="Account name" style="width: 300px;">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="inputBalance">Balance</label>
+                    <div class="controls">
+                        <input data-bind="value: balance" type="text" id="inputBalance" placeholder="Balance" style="width: 300px;">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button data-bind="click:editAccount" class="btn btn-primary">Update Account</button>
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        </div>
+    </div>
+    <script type="text/javascript">
+        function AccountsViewModel() {
+            var self = this;
+            self.accountsURI = 'http://localhost:3000/accounts';
+            self.accounts = ko.observableArray();
+
+            self.ajax = function (url, method, data) {
+                var request = {
+                    url: url,
+                    type: method,
+                    contentType: "application/json",
+                    accepts: "application/json",
+                    cache: false,
+                    dataType: 'json',
+                    data: JSON.stringify(data),
+                    error: function (jqXHR) {
+                        if (jqXHR.status !== 204) {
+                            console.log("ajax error " + jqXHR.status);
+                        }
+                    }
+                };
+                return $.ajax(request);
+            }
+
+            self.updateAccount = function (account, newAccount) {
+                var i = self.accounts.indexOf(account);
+                self.accounts()[i]._id(newAccount._id);
+                self.accounts()[i].name(newAccount.name);
+                self.accounts()[i].balance(newAccount.balance);
+            }
+
+            self.beginAdd = function () {
+                $('#add').modal('show');
+            }
+            self.add = function (account) {
+                self.ajax(self.accountsURI, 'POST', account).done(function (data) {
+                    self.accounts.push({
+                        _id: ko.observable(data._id),
+                        name: ko.observable(data.name),
+                        balance: ko.observable(data.balance),
+                    });
+                });
+            }
+            self.beginEdit = function (account) {
+                editAccountViewModel.setAccount(account);
+                $('#edit').modal('show');
+            }
+            self.edit = function (account, data) {
+                self.ajax(self.accountsURI + '/' + account._id(), 'PUT', data).done(function (updatedAccount) {
+                    self.updateAccount(account, updatedAccount);
+                });
+            }
+            self.remove = function (account) {
+                self.ajax(self.accountsURI + '/' + account._id(), 'DELETE').done(function () {
+                    self.accounts.remove(account);
+                }).error(data => {
+                    if (data.status === 204) self.accounts.remove(account);
+                });
+            }
+            self.populate = function () {
+                self.ajax(self.accountsURI, 'GET').done(function (accounts) {
+                    for (var i = 0; i < accounts.length; i++) {
+                        self.accounts.push({
+                            _id: ko.observable(accounts[i]._id),
+                            name: ko.observable(accounts[i].name),
+                            balance: ko.observable(accounts[i].balance),
+                        });
+                    }
+                }).fail(function (jqXHR) {
+                    if (jqXHR.status == 403)
+                        setTimeout(self.populate, 500);
+                });
+            }
+        }
+        function AddAccountViewModel() {
+            var self = this;
+            self.name = ko.observable();
+            self.balance = ko.observable();
+
+            self.addAccount = function () {
+                $('#add').modal('hide');
+                accountsViewModel.add({
+                    name: self.name() || undefined,
+                    balance: self.balance() || undefined,
+                });
+                self.name("");
+                self.balance("");
+            }
+        }
+        function EditAccountViewModel() {
+            var self = this;
+            self._id = ko.observable();
+            self.name = ko.observable();
+            self.balance = ko.observable();
+
+            self.setAccount = function (account) {
+                self.account = account;
+                self._id(account._id());
+                self.name(account.name());
+                self.balance(account.balance());
+                $('edit').modal('show');
+            }
+
+            self.editAccount = function () {
+                $('#edit').modal('hide');
+                accountsViewModel.edit(self.account, {
+                    _id: self._id(),
+                    name: self.name(),
+                    balance: self.balance(),
+                });
+            }
+        }
+
+        var accountsViewModel = new AccountsViewModel();
+        var addAccountViewModel = new AddAccountViewModel();
+        var editAccountViewModel = new EditAccountViewModel();
+
+        ko.applyBindings(accountsViewModel, $('#main')[0]);
+        ko.applyBindings(addAccountViewModel, $('#add')[0]);
+        ko.applyBindings(editAccountViewModel, $('#edit')[0]);
+        accountsViewModel.populate();
+    </script>
+</body>
+
+</html>

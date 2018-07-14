@@ -1,0 +1,10 @@
+{
+    "database": {
+      "default": {
+        "uri": "mongodb://localhost:27017/edx-course-db"
+      }
+    },
+    "api": {
+        "port": 3000
+    }
+  }
